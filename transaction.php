@@ -47,18 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $tanggal_sewa = $_POST['tanggal_sewa'] ?? '';
         $tanggal_kembali = $_POST['tanggal_kembali'] ?? '';
         $total_harga = $_POST['total_harga'] ?? '';
+        $denda = $_POST['denda'] ?? '';
         $status = $_POST['status'] ?? '';
 
-        if (!empty($id_pelanggan) && !empty($id_alat) && !empty($id_admin) && !empty($jumlah) && !empty($tanggal_sewa) && !empty($tanggal_kembali) && !empty($total_harga) && !empty($status)) {
-            $sql = "INSERT INTO transaksi (id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, status) VALUES ('$id_pelanggan', '$id_alat', '$id_admin', '$jumlah', '$tanggal_sewa', '$tanggal_kembali', '$total_harga', '$status')";
+        if (!empty($id_pelanggan) && !empty($id_alat) && !empty($id_admin) && !empty($jumlah) && !empty($tanggal_sewa) && !empty($tanggal_kembali) && !empty($total_harga) && !empty($denda) && !empty($status)) {
+            $sql = "INSERT INTO transaksi (id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, denda, status) VALUES ('$id_pelanggan', '$id_alat', '$id_admin', '$jumlah', '$tanggal_sewa', '$tanggal_kembali', '$total_harga', '$denda', '$status')";
 
             if ($conn->query($sql) === true) {
-                echo "New record created successfully";
             } else {
-                echo "Error: " . $sql . "<br>" . $conn->error;
             }
         } else {
-            echo "All fields are required.";
         }
 
     } elseif (isset($_POST['edit'])) {
@@ -70,9 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $tanggal_sewa = $_POST['tanggal_sewa'];
         $tanggal_kembali = $_POST['tanggal_kembali'];
         $total_harga = $_POST['total_harga'];
+        $denda = $_POST['denda'];
         $status = $_POST['status'];
 
-        $sql = "UPDATE transaksi SET id_pelanggan='$id_pelanggan', id_alat='$id_alat', id_admin='$id_admin', jumlah='$jumlah', tanggal_sewa='$tanggal_sewa', tanggal_kembali='$tanggal_kembali', total_harga='$total_harga', status='$status' WHERE id_transaksi='$id'";
+        $sql = "UPDATE transaksi SET id_pelanggan='$id_pelanggan', id_alat='$id_alat', id_admin='$id_admin', jumlah='$jumlah', tanggal_sewa='$tanggal_sewa', tanggal_kembali='$tanggal_kembali', total_harga='$total_harga', denda = '$denda', status='$status' WHERE id_transaksi='$id'";
         $conn->query($sql);
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
@@ -142,7 +141,8 @@ $transactionResult = $conn->query($transactionQuery);
                             <div
                                 class="col-span-1 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">
                                 ID</div>
-                            <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Pelanggan</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Pelanggan
+                            </div>
                             <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Alat
                             </div>
                             <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Admin</div>
@@ -151,10 +151,14 @@ $transactionResult = $conn->query($transactionQuery);
                             <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Sewa</div>
                             <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Kembali
                             </div>
-                            <div class="col-span-2 flex justify-center items-center font-semibold bg-white">Harga</div>
-                            <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Status
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Harga</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Denda
                             </div>
-                            <div class="col-span-2 flex justify-center items-center font-semibold rounded-r-lg bg-white">Actions</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-white">Status
+                            </div>
+                            <div
+                                class="col-span-2 flex justify-center items-center font-semibold rounded-r-lg bg-gray-100">
+                                Actions</div>
                         </div>
 
                         <div class="flex flex-col gap-4 justify-center items-center w-full">
@@ -190,16 +194,21 @@ $transactionResult = $conn->query($transactionQuery);
                                     <?php echo $row['tanggal_kembali']; ?>
                                 </div>
                                 <div
-                                    class="col-span-2 text-center flex justify-center items-center text-[14px] font-medium bg-white">
+                                    class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-white">
                                     <?php echo $row['total_harga']; ?>
                                 </div>
                                 <div
                                     class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100">
+                                    <?php echo $row['denda']; ?>
+                                </div>
+                                <div
+                                    class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-white">
                                     <?php echo $row['status']; ?>
                                 </div>
-                                <div class="col-span-2 text-center flex flex-row justify-center items-center gap-4 bg-white rounded-r-lg">
+                                <div
+                                    class="col-span-2 text-center flex flex-row justify-center items-center gap-4 bg-gray-100 rounded-r-lg">
                                     <button
-                                        onclick="openEditModal('<?php echo $row['id_transaksi']; ?>', '<?php echo $row['id_pelanggan']; ?>', '<?php echo $row['id_alat']; ?>', '<?php echo $row['id_admin']; ?>', '<?php echo $row['jumlah']; ?>', '<?php echo $row['tanggal_sewa']; ?>', '<?php echo $row['tanggal_kembali']; ?>', '<?php echo $row['total_harga']; ?>', '<?php echo $row['status']; ?>')"
+                                        onclick="openEditModal('<?php echo $row['id_transaksi']; ?>', '<?php echo $row['id_pelanggan']; ?>', '<?php echo $row['id_alat']; ?>', '<?php echo $row['id_admin']; ?>', '<?php echo $row['jumlah']; ?>', '<?php echo $row['tanggal_sewa']; ?>', '<?php echo $row['tanggal_kembali']; ?>', '<?php echo $row['total_harga']; ?>', '<?php echo $row['denda']; ?>', '<?php echo $row['status']; ?>')"
                                         class="w-16 py-2 flex justify-center items-center rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-800">Edit</button>
                                     <form
                                         class="w-16 py-2 flex justify-center items-center rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-800"
@@ -252,8 +261,24 @@ $transactionResult = $conn->query($transactionQuery);
                                     class="w-full px-4 py-2 border rounded-md">
                             </div>
                             <div class="mb-4">
-                                <input type="text" name="status" placeholder="Status"
+                                <input type="number" name="denda" placeholder="Denda"
                                     class="w-full px-4 py-2 border rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <div class="grid grid-cols-2 gap-0 bg-gray-200 rounded-md select-none">
+                                    <label
+                                        class="radio flex flex-row items-center justify-center w-full h-12 rounded-lg cursor-pointer">
+                                        <input type="radio" name="status" value="Proses" class="peer hidden" checked />
+                                        <span
+                                            class="tracking-wide peer-checked:bg-black w-full h-full flex flex-row justify-center items-center peer-checked:text-white text-gray-700 rounded-lg transition duration-150 ease-in-out">Proses</span>
+                                    </label>
+                                    <label
+                                        class="radio flex flex-grow items-center justify-center rounded-lg h-12 w-full cursor-pointer">
+                                        <input type="radio" name="status" value="Selesai" class="peer hidden" />
+                                        <span
+                                            class="tracking-wide peer-checked:bg-green-600 peer-checked:text-white flex flex-row justify-center items-center text-gray-700 w-full h-full rounded-lg transition duration-150 ease-in-out">Selesai</span>
+                                    </label>
+                                </div>
                             </div>
                             <div class="flex justify-center gap-4">
                                 <button type="button" onclick="closeAddModal()"
@@ -304,8 +329,26 @@ $transactionResult = $conn->query($transactionQuery);
                                     class="w-full px-4 py-2 border rounded-md">
                             </div>
                             <div class="mb-4">
-                                <input type="text" name="status" id="edit-status" placeholder="Status"
+                                <input type="number" name="denda" id="edit-denda" placeholder="Denda"
                                     class="w-full px-4 py-2 border rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <div class="grid grid-cols-2 gap-0 bg-gray-200 rounded-md select-none">
+                                    <label
+                                        class="radio flex flex-row items-center justify-center w-full h-12 rounded-lg cursor-pointer">
+                                        <input type="radio" name="status" value="Proses" id="edit-status-proses"
+                                            class="peer hidden" />
+                                        <span
+                                            class="tracking-wide peer-checked:bg-black w-full h-full flex flex-row justify-center items-center peer-checked:text-white text-gray-700 rounded-lg transition duration-150 ease-in-out">Proses</span>
+                                    </label>
+                                    <label
+                                        class="radio flex flex-grow items-center justify-center rounded-lg h-12 w-full cursor-pointer">
+                                        <input type="radio" name="status" value="Selesai" id="edit-status-selesai"
+                                            class="peer hidden" />
+                                        <span
+                                            class="tracking-wide peer-checked:bg-green-600 peer-checked:text-white flex flex-row justify-center items-center text-gray-700 w-full h-full rounded-lg transition duration-150 ease-in-out">Selesai</span>
+                                    </label>
+                                </div>
                             </div>
                             <div class="flex justify-center gap-4">
                                 <button type="button" onclick="closeEditModal()"
@@ -335,7 +378,7 @@ $transactionResult = $conn->query($transactionQuery);
             document.getElementById('addModal').classList.add('hidden');
         }
 
-        function openEditModal(id, id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, status) {
+        function openEditModal(id, id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, denda, status) {
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-id_pelanggan').value = id_pelanggan;
             document.getElementById('edit-id_alat').value = id_alat;
@@ -344,7 +387,13 @@ $transactionResult = $conn->query($transactionQuery);
             document.getElementById('edit-tanggal_sewa').value = tanggal_sewa;
             document.getElementById('edit-tanggal_kembali').value = tanggal_kembali;
             document.getElementById('edit-total_harga').value = total_harga;
-            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-denda').value = denda;
+            // Set status radio buttons
+        if (status === "Proses") {
+            document.getElementById('edit-status-proses').checked = true;
+        } else {
+            document.getElementById('edit-status-selesai').checked = true;
+        }
             document.getElementById('editModal').classList.remove('hidden');
         }
 

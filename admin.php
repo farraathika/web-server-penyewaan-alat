@@ -128,6 +128,7 @@ $adminResult = $conn->query($adminQuery);
                                 <div class="col-span-4 text-center flex justify-center items-center bg-gray-100">
                                     <?php echo $row['email']; ?>
                                 </div>
+                                
                                 <div
                                     class="col-span-3 text-center flex justify-center items-center text-[14px] font-medium gap-4 rounded-r-lg bg-white">
                                     <button
@@ -135,7 +136,7 @@ $adminResult = $conn->query($adminQuery);
                                         class="px-4 py-2 flex justify-center items-center rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-800">Edit</button>
                                     
                                     <form
-                                        class="px-4 py-2 flex justify-center items-center rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-800"
+                                        class="px-4 mt-3 py-2 flex justify-center items-center rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-800"
                                         method="post" style="display:inline-block;">
                                         <input type="hidden" name="id" value="<?php echo $row['id_admin']; ?>">
                                         <button type="submit" name="delete">Delete</button>
