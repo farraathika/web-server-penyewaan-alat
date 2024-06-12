@@ -20,25 +20,25 @@ if ($result->num_rows > 0) {
 }
 $_SESSION['admin_name'] = $admin_name;
 
-// Fetch data for dashboard
-$totalCustomersQuery = "SELECT COUNT(*) AS total_pelanggan FROM pelanggan";
-$totalCustomersResult = $conn->query($totalCustomersQuery);
-$totalCustomers = $totalCustomersResult->fetch_assoc()['total_pelanggan'];
+// // Fetch data for dashboard
+// $totalCustomersQuery = "SELECT COUNT(*) AS total_pelanggan FROM pelanggan";
+// $totalCustomersResult = $conn->query($totalCustomersQuery);
+// $totalCustomers = $totalCustomersResult->fetch_assoc()['total_pelanggan'];
 
-$totalStockQuery = "SELECT SUM(stok) AS total_stok FROM alat";
-$totalStockResult = $conn->query($totalStockQuery);
-$totalStock = $totalStockResult->fetch_assoc()['total_stok'];
+// $totalStockQuery = "SELECT SUM(stok) AS total_stok FROM alat";
+// $totalStockResult = $conn->query($totalStockQuery);
+// $totalStock = $totalStockResult->fetch_assoc()['total_stok'];
 
-$totalRevenueQuery = "SELECT SUM(total_harga) AS total_pendapatan FROM transaksi WHERE status = 'Selesai'";
-$totalRevenueResult = $conn->query($totalRevenueQuery);
-$totalRevenue = $totalRevenueResult->fetch_assoc()['total_pendapatan'];
+// $totalRevenueQuery = "SELECT SUM(total_harga) AS total_pendapatan FROM transaksi WHERE status = 'Selesai'";
+// $totalRevenueResult = $conn->query($totalRevenueQuery);
+// $totalRevenue = $totalRevenueResult->fetch_assoc()['total_pendapatan'];
 
-$recentTransactionsQuery = "SELECT * FROM view_detail_transaksi ORDER BY tanggal_sewa DESC LIMIT 5";
-$recentTransactionsResult = $conn->query($recentTransactionsQuery);
+// $recentTransactionsQuery = "SELECT * FROM view_detail_transaksi ORDER BY tanggal_sewa DESC LIMIT 5";
+// $recentTransactionsResult = $conn->query($recentTransactionsQuery);
 
-$stockDetailsQuery = "SELECT * FROM view_stok";
-$stockDetailsResult = $conn->query($stockDetailsQuery);
-?>
+// $stockDetailsQuery = "SELECT * FROM view_stok";
+// $stockDetailsResult = $conn->query($stockDetailsQuery);
+// ?>
 
 <!DOCTYPE html>
 <html lang="en">

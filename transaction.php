@@ -41,7 +41,6 @@ $admin_email = $_SESSION['login_user'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add'])) {
         $id_pelanggan = $_POST['id_pelanggan'] ?? '';
-        $id_alat = $_POST['id_alat'] ?? '';
         $id_admin = $_POST['id_admin'] ?? '';
         $jumlah = $_POST['jumlah'] ?? '';
         $tanggal_sewa = $_POST['tanggal_sewa'] ?? '';
@@ -50,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $denda = $_POST['denda'] ?? '';
         $status = $_POST['status'] ?? '';
 
-        if (!empty($id_pelanggan) && !empty($id_alat) && !empty($id_admin) && !empty($jumlah) && !empty($tanggal_sewa) && !empty($tanggal_kembali) && !empty($total_harga) && !empty($denda) && !empty($status)) {
+        if (!empty($id_pelanggan) && !empty($id_admin) && !empty($jumlah) && !empty($tanggal_sewa) && !empty($tanggal_kembali) && !empty($total_harga) && !empty($denda) && !empty($status)) {
             $sql = "INSERT INTO transaksi (id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, denda, status) VALUES ('$id_pelanggan', '$id_alat', '$id_admin', '$jumlah', '$tanggal_sewa', '$tanggal_kembali', '$total_harga', '$denda', '$status')";
 
             if ($conn->query($sql) === true) {
