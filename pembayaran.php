@@ -20,35 +20,45 @@ if ($result->num_rows > 0) {
 }
 $_SESSION['admin_name'] = $admin_name;
 
-include 'db/connection.php';
-$admin_email = $_SESSION['login_user'];
-
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add'])) {
+        // Retrieve form data
         $id_transaksi = $_POST['id_transaksi'];
         $tanggal_pembayaran = $_POST['tanggal_pembayaran'];
         $jumlah_pembayaran = $_POST['jumlah_pembayaran'];
         $metode_pembayaran = $_POST['metode_pembayaran'];
 
-        $sql = "INSERT INTO pembayaran (id_transaksi, tanggal_pembayaran, jumlah_pembayaran, metode_pembayaran) VALUES ('$id_transaksi', '$tanggal_pembayaran', '$jumlah_pembayaran', '$metode_pembayaran')";
-        $conn->query($sql);
+        // Call stored procedure
+        $stmt = $conn->prepare("CALL manage_pembayaran(NULL, ?, ?, ?, ?, 'add')");
+        $stmt->bind_param("isds", $id_transaksi, $tanggal_pembayaran, $jumlah_pembayaran, $metode_pembayaran);
+        $stmt->execute();
+        $stmt->close();
     } elseif (isset($_POST['edit'])) {
+        // Retrieve form data
         $id = $_POST['id'];
         $id_transaksi = $_POST['id_transaksi'];
         $tanggal_pembayaran = $_POST['tanggal_pembayaran'];
         $jumlah_pembayaran = $_POST['jumlah_pembayaran'];
         $metode_pembayaran = $_POST['metode_pembayaran'];
         
-        $sql = "UPDATE pembayaran SET id_transaksi='$id_transaksi', tanggal_pembayaran='$tanggal_pembayaran', jumlah_pembayaran='$jumlah_pembayaran', metode_pembayaran='$metode_pembayaran' WHERE id_pembayaran='$id'";
-        $conn->query($sql);
+        // Call stored procedure
+        $stmt = $conn->prepare("CALL manage_pembayaran(?, ?, ?, ?, ?, 'edit')");
+        $stmt->bind_param("iisds", $id, $id_transaksi, $tanggal_pembayaran, $jumlah_pembayaran, $metode_pembayaran);
+        $stmt->execute();
+        $stmt->close();
     } elseif (isset($_POST['delete'])) {
+        // Retrieve form data
         $id = $_POST['id'];
-
-        $sql = "DELETE FROM pembayaran WHERE id_pembayaran='$id'";
-        $conn->query($sql);
+        
+        // Call stored procedure
+        $stmt = $conn->prepare("CALL manage_pembayaran(?, NULL, NULL, NULL, NULL, 'delete')");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
     }
 }
+
 
 // Fetch payment data
 $paymentQuery = "SELECT * FROM pembayaran";
@@ -227,7 +237,7 @@ $paymentResult = $conn->query($paymentQuery);
     </div>
     <footer class="h-[5vh] w-full px-4 pr-6 py-[0.4px]">
             <div class="rounded-lg h-full bottom-0 bg-white flex flex-row justify-center items-center">
-                haloo
+        
             </div>
         </footer>
     </section>

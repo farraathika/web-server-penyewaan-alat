@@ -8,8 +8,9 @@ if (!isset($_SESSION['login_user'])) {
 
 include 'db/connection.php';
 $admin_email = $_SESSION['login_user'];
+$sql = "SELECT id_admin, nama FROM admin WHERE email = '$admin_email'";
 
-$sql = "SELECT nama FROM admin WHERE email = '$admin_email'";
+// $sql = "SELECT nama FROM admin WHERE email = '$admin_email'";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -19,47 +20,42 @@ if ($result->num_rows > 0) {
     $admin_name = "Unknown";
 }
 $_SESSION['admin_name'] = $admin_name;
-
-include 'db/connection.php';
-$admin_email = $_SESSION['login_user'];
-
-$sql = "SELECT nama FROM admin WHERE email = '$admin_email'";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $admin_name = $row['nama'];
-} else {
-    $admin_name = "Unknown";
-}
-$_SESSION['admin_name'] = $admin_name;
-
-include 'db/connection.php';
-$admin_email = $_SESSION['login_user'];
+// echo "Admin Email: " . $admin_email;
+// var_dump($result);
 
 // Handle CRUD
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add'])) {
-        $id_pelanggan = $_POST['id_pelanggan'] ?? '';
-        $id_admin = $_POST['id_admin'] ?? '';
-        $jumlah = $_POST['jumlah'] ?? '';
-        $tanggal_sewa = $_POST['tanggal_sewa'] ?? '';
-        $tanggal_kembali = $_POST['tanggal_kembali'] ?? '';
-        $total_harga = $_POST['total_harga'] ?? '';
-        $denda = $_POST['denda'] ?? '';
-        $status = $_POST['status'] ?? '';
+        // Retrieve form data
+        $id_pelanggan = $_POST['id_pelanggan'];
+        $id_alat = $_POST['id_alat'];
+        $id_admin = $_SESSION['id_admin']; 
+        $jumlah = $_POST['jumlah'];
+        $tanggal_sewa = $_POST['tanggal_sewa'];
+        
+        $tanggal_kembali = $_POST['tanggal_kembali'];
+        $total_harga = $_POST['total_harga'];
+        $status = $_POST['status'];
 
-        if (!empty($id_pelanggan) && !empty($id_admin) && !empty($jumlah) && !empty($tanggal_sewa) && !empty($tanggal_kembali) && !empty($total_harga) && !empty($denda) && !empty($status)) {
-            $sql = "INSERT INTO transaksi (id_pelanggan, id_alat, id_admin, jumlah, tanggal_sewa, tanggal_kembali, total_harga, denda, status) VALUES ('$id_pelanggan', '$id_alat', '$id_admin', '$jumlah', '$tanggal_sewa', '$tanggal_kembali', '$total_harga', '$denda', '$status')";
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("CALL addTransaksi(?, ?, ?, ?, ?, ?, ?, ?, @p_denda)");
 
-            if ($conn->query($sql) === true) {
-            } else {
-            }
-        } else {
-        }
 
+
+        $stmt->bind_param("iiiiisds", $id_pelanggan, $id_alat, $id_admin, $jumlah, $tanggal_sewa, $tanggal_kembali, $total_harga, $status);
+
+        // Execute the statement
+        $stmt->execute();
+
+        // Close the statement
+        $stmt->close();
+
+        // Retrieve the denda value from the stored procedure
+        $dendaResult = $conn->query("SELECT @p_denda AS denda");
+        $dendaRow = $dendaResult->fetch_assoc();
+        $denda = $dendaRow['denda'];
     } elseif (isset($_POST['edit'])) {
-        $id = $_POST['id'];
+        $id_transaksi = $_POST['id'];
         $id_pelanggan = $_POST['id_pelanggan'];
         $id_alat = $_POST['id_alat'];
         $id_admin = $_POST['id_admin'];
@@ -67,16 +63,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $tanggal_sewa = $_POST['tanggal_sewa'];
         $tanggal_kembali = $_POST['tanggal_kembali'];
         $total_harga = $_POST['total_harga'];
-        $denda = $_POST['denda'];
+        $denda = isset($_POST['denda']) ? $_POST['denda'] : null; // Check if denda is set
         $status = $_POST['status'];
 
-        $sql = "UPDATE transaksi SET id_pelanggan='$id_pelanggan', id_alat='$id_alat', id_admin='$id_admin', jumlah='$jumlah', tanggal_sewa='$tanggal_sewa', tanggal_kembali='$tanggal_kembali', total_harga='$total_harga', denda = '$denda', status='$status' WHERE id_transaksi='$id'";
-        $conn->query($sql);
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("UPDATE transaksi SET id_pelanggan = ?, id_alat = ?, id_admin = ?, jumlah = ?, tanggal_sewa = ?, tanggal_kembali = ?, total_harga = ?, denda = ?, status = ? WHERE id_transaksi = ?");
+        
+        // Bind the parameters
+        $stmt->bind_param("iiiissdssi", $id_pelanggan, $id_alat, $id_admin, $jumlah, $tanggal_sewa, $tanggal_kembali, $total_harga, $denda, $status, $id_transaksi);
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Close the statement
+        $stmt->close();
     } elseif (isset($_POST['delete'])) {
-        $id = $_POST['id'];
+        $id_transaksi = $_POST['id'];
 
-        $sql = "DELETE FROM transaksi WHERE id_transaksi='$id'";
-        $conn->query($sql);
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("DELETE FROM transaksi WHERE id_transaksi = ?");
+        
+        // Bind the parameters
+        $stmt->bind_param("i", $id_transaksi);
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Close the statement
+        $stmt->close();
     }
 }
 
@@ -226,70 +240,111 @@ $transactionResult = $conn->query($transactionQuery);
 
         <!-- Add Transaksi Modal -->
         <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Add New Transaksi</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <form method="post">
-                            <div class="mb-4">
-                                <input type="text" name="id_pelanggan" placeholder="ID Pelanggan"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="text" name="id_alat" placeholder="ID Alat"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="text" name="id_admin" placeholder="ID Admin"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="number" name="jumlah" placeholder="Jumlah"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="date" name="tanggal_sewa" placeholder="Tanggal Sewa"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="date" name="tanggal_kembali" placeholder="Tanggal Kembali"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="number" name="total_harga" placeholder="Total Harga"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <input type="number" name="denda" placeholder="Denda"
-                                    class="w-full px-4 py-2 border rounded-md">
-                            </div>
-                            <div class="mb-4">
-                                <div class="grid grid-cols-2 gap-0 bg-gray-200 rounded-md select-none">
-                                    <label
-                                        class="radio flex flex-row items-center justify-center w-full h-12 rounded-lg cursor-pointer">
-                                        <input type="radio" name="status" value="Proses" class="peer hidden" checked />
-                                        <span
-                                            class="tracking-wide peer-checked:bg-black w-full h-full flex flex-row justify-center items-center peer-checked:text-white text-gray-700 rounded-lg transition duration-150 ease-in-out">Proses</span>
-                                    </label>
-                                    <label
-                                        class="radio flex flex-grow items-center justify-center rounded-lg h-12 w-full cursor-pointer">
-                                        <input type="radio" name="status" value="Selesai" class="peer hidden" />
-                                        <span
-                                            class="tracking-wide peer-checked:bg-green-600 peer-checked:text-white flex flex-row justify-center items-center text-gray-700 w-full h-full rounded-lg transition duration-150 ease-in-out">Selesai</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="flex justify-center gap-4">
-                                <button type="button" onclick="closeAddModal()"
-                                    class="px-4 py-2 bg-gray-600 text-white rounded-md">Cancel</button>
-                                <button type="submit" name="add"
-                                    class="px-4 py-2 bg-green-600 text-white rounded-md">Add</button>
-                            </div>
-                        </form>
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Add New Transaksi</h3>
+            <div class="mt-2 px-7 py-3">
+                <form method="post" id="addForm">
+                    <div class="mb-4">
+                        <label for="id_pelanggan">Pelanggan:</label>
+                        <select name="id_pelanggan" id="id_pelanggan" class="w-full px-4 py-2 border rounded-md">
+                            <option value="">Pilih Pelanggan</option>
+                            <?php
+                            $pelangganQuery = "SELECT id_pelanggan, nama FROM pelanggan";
+                            $pelangganResult = $conn->query($pelangganQuery);
+                            while ($row = $pelangganResult->fetch_assoc()) {
+                                echo "<option value='" . $row['id_pelanggan'] . "'>" . $row['nama'] . "</option>";
+                            }
+                            ?>
+                        </select>
                     </div>
-                </div>
+                    <div class="mb-4">
+                        <label for="id_alat">Alat:</label>
+                        <select name="id_alat" id="id_alat" class="w-full px-4 py-2 border rounded-md">
+                            <option value="">Pilih Alat</option>
+                            <?php
+                            $alatQuery = "SELECT id_alat, nama, harga_sewa_per_hari FROM alat";
+                            $alatResult = $conn->query($alatQuery);
+                            while ($row = $alatResult->fetch_assoc()) {
+                                echo "<option value='" . $row['id_alat'] . "' data-harga='" . $row['harga_sewa_per_hari'] . "'>" . $row['nama'] . "</option>";
+                            }
+                            ?>
+                        </select>
+                        <input type="hidden" name="harga_sewa_per_hari" id="harga_sewa_per_hari">
+                    </div>
+                    <div class="mb-4">
+    <label for="id_admin">Admin:</label>
+    <select name="id_admin" id="id_admin" class="w-full px-4 py-2 border rounded-md">
+        <option value="">Pilih Admin</option>
+        <?php
+        $query = "SELECT id_admin, nama FROM admin";
+        $result = $conn->query($query);
+
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<option value='" . $row['id_admin'] . "'>" . $row['nama'] . "</option>";
+            }
+        } else {
+            echo "<option value=''>No admin found</option>";
+        }
+        ?>
+    </select>
+</div>
+
+
+                    <div class="mb-4">
+                        <input type="number" name="jumlah" id="jumlah" placeholder="Jumlah" class="w-full px-4 py-2 border rounded-md" oninput="calculateTotal()">
+                    </div>
+                    <div class="mb-4">
+                        <input type="date" name="tanggal_sewa" placeholder="Tanggal Sewa" class="w-full px-4 py-2 border rounded-md">
+                    </div>
+                    <div class="mb-4">
+                        <input type="date" name="tanggal_kembali" placeholder="Tanggal Kembali" class="w-full px-4 py-2 border rounded-md">
+                    </div>
+                    <div class="mb-4">
+                        <input type="number" name="total_harga" id="total_harga" placeholder="Total Harga" class="w-full px-4 py-2 border rounded-md" readonly>
+                    </div>
+                    <div class="mb-4">
+                        <div class="grid grid-cols-2 gap-0 bg-gray-200 rounded-md select-none">
+                            <label class="radio flex flex-row items-center justify-center w-full h-12 rounded-lg cursor-pointer">
+                                <input type="radio" name="status" value="Proses" class="peer hidden" checked />
+                                <span class="tracking-wide peer-checked:bg-black w-full h-full flex flex-row justify-center items-center peer-checked:text-white text-gray-700 rounded-lg transition duration-150 ease-in-out">Proses</span>
+                            </label>
+                            <label class="radio flex flex-grow items-center justify-center rounded-lg h-12 w-full cursor-pointer">
+                                <input type="radio" name="status" value="Selesai" class="peer hidden" />
+                                <span class="tracking-wide peer-checked:bg-green-600 peer-checked:text-white flex flex-row justify-center items-center text-gray-700 w-full h-full rounded-lg transition duration-150 ease-in-out">Selesai</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-600 text-white rounded-md">Cancel</button>
+                        <button type="submit" name="add" class="px-4 py-2 bg-green-600 text-white rounded-md">Add</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('id_alat').addEventListener('change', function() {
+        var harga = this.options[this.selectedIndex].getAttribute('data-harga');
+        document.getElementById('harga_sewa_per_hari').value = harga;
+        calculateTotal();
+    });
+
+    function calculateTotal() {
+        var harga = parseFloat(document.getElementById('harga_sewa_per_hari').value);
+        var jumlah = parseInt(document.getElementById('jumlah').value);
+        if (!isNaN(harga) && !isNaN(jumlah)) {
+            var total = harga * jumlah;
+            document.getElementById('total_harga').value = total;
+        } else {
+            document.getElementById('total_harga').value = '';
+        }
+    }
+</script>
+
 
         <!-- Edit Transaksi Modal -->
         <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">

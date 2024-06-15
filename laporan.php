@@ -6,7 +6,6 @@ if (!isset($_SESSION['login_user'])) {
     exit;
 }
 
-include "proses/get_alat_peminjaman.php";
 include 'db/connection.php';
 $admin_email = $_SESSION['login_user'];
 
@@ -53,8 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Fetch stock data
-$stockQuery = "SELECT * FROM alat";
+$stockQuery = "SELECT * FROM alat_dipinjam";
 $stockResult = $conn->query($stockQuery);
+
+$view2query = "SELECT * FROM detail_penyewaan";
+$view2result = $conn->query($view2query);
+
+$view3query = "SELECT * FROM stok_tersisa";
+$view3result = $conn->query($view3query);
+
+$view4query = "SELECT * FROM alat_dipinjam_perbulan";
+$view4result = $conn->query($view4query);
+
+$view5query = "SELECT * FROM detail_pesanan";
+$view5result = $conn->query($view5query);
 ?>
 
 <!DOCTYPE html>
@@ -75,47 +86,37 @@ $stockResult = $conn->query($stockQuery);
                 <?php include 'sidebar.php';?>
             </div>
             <div class="w-[80%] flex flex-col gap-0 pr-6 pl-10">
-                <nav
-                    class="navbar flex flex-row shadow-xl justify-between items-center w-full h-16 max-h-16 bg-white my-4 px-4 rounded-lg">
-                    <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Manage Stock</a>
-                    <div
-                        class="py-2 px-4 flex items-center rounded-lg min-w-[550px] duration-300 cursor-pointer text-gray-700 border border-gray-600 border-opacity-40">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-search" viewBox="0 0 16 16">
-                            <path
-                                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
-                        </svg>
-                        <input type="text" placeholder="Search"
-                            class="text-[15px] ml-4 w-full bg-transparent placeholder:text-semibold placeholder:tracking-wide focus:outline-none" />
-                    </div>
+                
+                <div class="container-content mb-2 flex flex-col gap-2 overflow-y-auto">
+                <div
+                    class="navbar flex flex-row shadow-xl justify-between items-center w-full h-16 max-h-16 bg-white py-3 my-4 px-4 rounded-lg">
+                    <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Alat Yang Di Pinjam</a>
                     <div class="flex flex-row justify-center items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                             class="bi bi-person-fill-check" viewBox="0 0 16 16">
                             <path
                                 d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
                             <path
                                 d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4" />
-                        </svg>
-                        <p class="text-[13px] font-medium text-gray-800">
+                        </svg> -->
+                        <!-- <p class="text-[13px] font-medium text-gray-800">
                             <?php echo $_SESSION['admin_name']; ?>
-                        </p>
+                        </p> -->
                     </div>
-                </nav>
-                <div class="container-content mb-2 flex flex-col gap-4 overflow-y-auto">
-                    
-                    <div class="flex flex-col gap-10 justify-center items-center w-full">
+                </div>
+                    <div class="flex flex-col gap-2 justify-center items-center w-full">
                         <div
                             class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
                             <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">
                                 ID</div>
-                            <div class="col-span-3 flex justify-center items-center font-semibold">Name</div>
-                            <div class="col-span-3 flex justify-center items-center font-semibold bg-gray-100">Price</div>
-                            <div class="col-span-2 flex justify-center items-center font-semibold">Stock</div>
-                            <div class="col-span-3 flex justify-center items-center font-semibold bg-gray-100">Description
+                            <div class="col-span-3 flex justify-center items-center font-semibold">Nama</div>
+                            <div class="col-span-3 flex justify-center items-center font-semibold bg-gray-100">ID Transaksi</div>
+                            <div class="col-span-2 flex justify-center items-center font-semibold">Tanggal Sewa</div>
+                            <div class="col-span-3 flex justify-center items-center font-semibold bg-gray-100">Tanggal Kembali
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-4 justify-center items-center w-full">
+                        <div class="flex flex-col gap-2 justify-center items-center w-full">
                             <?php while ($row = $stockResult->fetch_assoc()) {?>
                             <div
                                 class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
@@ -128,19 +129,226 @@ $stockResult = $conn->query($stockQuery);
                                 </div>
                                 <div
                                     class="col-span-3 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100">
-                                    <?php echo $row['harga_sewa_per_hari']; ?>
+                                    <?php echo $row['id_transaksi']; ?>
                                 </div>
                                 <div class="col-span-2 text-center flex justify-center items-center text-[14px] font-medium">
-                                    <?php echo $row['stok']; ?>
+                                    <?php echo $row['tanggal_sewa']; ?>
                                 </div>
                                 <div
                                     class="col-span-3 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 px-2">
-                                    <?php echo $row['deskripsi']; ?>
+                                    <?php echo $row['tanggal_kembali']; ?>
                                 </div>
                                 
                             </div>
                             <?php }?>
                         </div>
+                    <div
+                        class="navbar flex flex-row shadow-xl justify-between items-center w-full h-14 max-h-14 bg-white my-4 px-4 rounded-lg">
+                        <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Detail Penyewaan</a>
+                        <div class="flex flex-row justify-center items-center gap-2">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                            class="bi bi-person-fill-check" viewBox="0 0 16 16">
+                            <path
+                                d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                            <path
+                                d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4" />
+                        </svg> -->
+                        <!-- <p class="text-[13px] font-medium text-gray-800">
+                            <?php echo $_SESSION['admin_name']; ?>
+                        </p> -->
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 justify-center items-center w-full">
+                        <div
+                            class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">
+                                ID</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold">Nama Pelanggan</div>
+                            <div class="col-span-2 flex justify-center items-center font-semibold bg-gray-100">Nama Alat</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold">Jumlah</div>
+                            <div class="col-span-2 flex justify-center items-center font-semibold bg-gray-100">Tanggal Sewa</div>
+                            <div class="col-span-2 flex justify-center items-center font-semibold">Tanggal Kembali</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Total Harga</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold">Denda</div>
+                            <div class="col-span-1 flex justify-center items-center font-semibold bg-gray-100">Status</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2 justify-center items-center w-full">
+                            <?php while ($row = $view2result->fetch_assoc()) {?>
+                            <div
+                                class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                                <div
+                                    class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['id_transaksi']; ?>
+                                </div>
+                                <div class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['nama_pelanggan']; ?>
+                                </div>
+                                <div
+                                    class="col-span-2 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['nama_alat']; ?>
+                                </div>
+                                <div class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['jumlah']; ?>
+                                </div>
+                                <div
+                                    class="col-span-2 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['tanggal_sewa']; ?>
+                                </div>
+                                <div
+                                    class="col-span-2 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['tanggal_kembali']; ?>
+                                </div>
+                                <div class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['total_harga']; ?>
+                                </div>
+                                <div
+                                    class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['denda']; ?>
+                                </div>
+                                <div
+                                    class="col-span-1 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['status']; ?>
+                                </div>
+                                
+                            </div>
+                            <?php }?>
+                        </div>
+
+                        <div
+                    class="navbar flex flex-row shadow-xl justify-between items-center w-full h-16 max-h-16 bg-white my-4 px-4 rounded-lg">
+                    <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Stok Tersedia</a>
+
+                    <div class="flex flex-row justify-center items-center gap-2">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                            class="bi bi-person-fill-check" viewBox="0 0 16 16">
+                            <path
+                                d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                            <path
+                                d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4" />
+                        </svg> -->
+                        <!-- <p class="text-[13px] font-medium text-gray-800">
+                            <?php echo $_SESSION['admin_name']; ?>
+                        </p> -->
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 justify-center items-center w-full">
+                        <div
+                            class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                            <div class="col-span-6 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">
+                                Nama Produk</div>
+                            <div class="col-span-6 flex justify-center items-center font-semibold">Stok Tersisa</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2 justify-center items-center w-full">
+                            <?php while ($row = $view3result->fetch_assoc()) {?>
+                            <div
+                                class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                                <div
+                                    class="col-span-6 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['nama_produk']; ?>
+                                </div>
+                                <div class="col-span-6 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['stok_tersisa']; ?>
+                                </div>
+                            </div>
+                            <?php }?>
+                        </div>
+
+                        <div
+                    class="navbar flex flex-row shadow-xl justify-between items-center w-full h-16 max-h-16 bg-white my-4 px-4 rounded-lg">
+                    <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Alat Di Pinjam Per Bulan</a>
+                    <div class="flex flex-row justify-center items-center gap-2">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                            class="bi bi-person-fill-check" viewBox="0 0 16 16">
+                            <path
+                                d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                            <path
+                                d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4" />
+                        </svg> -->
+                        <!-- <p class="text-[13px] font-medium text-gray-800">
+                            <?php echo $_SESSION['admin_name']; ?>
+                        </p> -->
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 justify-center items-center w-full">
+                        <div
+                            class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                            <div class="col-span-4 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">Bulan</div>
+                            <div class="col-span-4 flex justify-center items-center font-semibold">Nama Alat</div>
+                            <div class="col-span-4 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">Jumlah Peminjaman</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2 justify-center items-center w-full">
+                            <?php while ($row = $view4result->fetch_assoc()) {?>
+                            <div
+                                class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                                <div
+                                    class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['bulan']; ?>
+                                </div>
+                                <div class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['nama_alat']; ?>
+                                </div>
+                                <div class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['jumlah_peminjaman']; ?>
+                                </div>
+                            </div>
+                            <?php }?>
+                        </div>
+
+                        <div
+                    class="navbar flex flex-row shadow-xl justify-between items-center w-full h-16 max-h-16 bg-white my-4 px-4 rounded-lg">
+                    <a href="stock.php" class="text-lg text-gray-700 font-semibold tracking-wide">Detail Pesanan</a>
+
+                    <div class="flex flex-row justify-center items-center gap-2">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                            class="bi bi-person-fill-check" viewBox="0 0 16 16">
+                            <path
+                                d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                            <path
+                                d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4" />
+                        </svg> -->
+                        <!-- <p class="text-[13px] font-medium text-gray-800">
+                            <?php echo $_SESSION['admin_name']; ?>
+                        </p> -->
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 justify-center items-center w-full">
+                        <div
+                            class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                            <div class="col-span-4 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">Nama Pelanggan</div>
+                            <div class="col-span-4 flex justify-center items-center font-semibold">Total</div>
+                            <div class="col-span-4 flex justify-center items-center font-semibold bg-gray-100 rounded-l-lg">Tanggal Pesanan</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2 justify-center items-center w-full">
+                            <?php while ($row = $view5result->fetch_assoc()) {?>
+                            <div
+                                class="grid grid-cols-12 border border-gray-700 border-opacity-60 gap-6 w-full min-h-16 rounded-lg shadow-md bg-white">
+                                <div
+                                    class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['nama_pelanggan']; ?>
+                                </div>
+                                <div class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium">
+                                    <?php echo $row['total']; ?>
+                                </div>
+                                <div class="col-span-4 text-center flex justify-center items-center text-[14px] font-medium bg-gray-100 rounded-l-lg">
+                                    <?php echo $row['tanggal_pesanan']; ?>
+                                </div>
+                            </div>
+                            <?php }?>
+                        </div>
+
+                
                     </div>
                 </div>
             </div>
@@ -178,53 +386,10 @@ $stockResult = $conn->query($stockQuery);
             </div>
         </div>
 
-       
-
-        <div>
-    <h3 style="text-align: center; font-family: Arial;">Ringkasan Pemesanan</h3>
-    <table border="0" class="fontdt">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>ID Alat</th>
-                <th>Nama Alat</th>
-                <th>ID Transaksi</th>
-                <th>Tanggal Sewa</th>
-                <th>Tanggal Kembali</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-include 'proses/get_alat_peminjaman.php';
-
-$no = 1;
-if (mysqli_num_rows($get_alat_peminjaman) > 0) {
-    while ($data = mysqli_fetch_assoc($get_alat_peminjaman)) {
-        echo "<tr>";
-        echo "<td>" . $no++ . "</td>";
-        echo "<td>" . $data['id_alat'] . "</td>";
-        echo "<td>" . $data['nama'] . "</td>";
-        echo "<td>" . $data['id_transaksi'] . "</td>";
-        echo "<td>" . $data['tanggal_sewa'] . "</td>";
-        echo "<td>" . $data['tanggal_kembali'] . "</td>";
-        echo "</tr>";
-    }
-} else {
-    echo "<tr><td colspan='6'>No data found</td></tr>";
-}
-?>
-        </tbody>
-    </table>
-</div>
-
-
-
-
-
 
         <footer class="h-[5vh] w-full px-4 pr-6 py-[0.4px]">
             <div class="rounded-lg h-full bottom-0 bg-white flex flex-row justify-center items-center">
-                haloo
+            
             </div>
         </footer>
     </section>

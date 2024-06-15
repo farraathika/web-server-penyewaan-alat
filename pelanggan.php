@@ -20,35 +20,52 @@ if ($result->num_rows > 0) {
 }
 $_SESSION['admin_name'] = $admin_name;
 
-include 'db/connection.php';
-$admin_email = $_SESSION['login_user'];
-
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add'])) {
+        // Retrieve form data
         $name = $_POST['name'];
         $address = $_POST['address'];
         $phone = $_POST['phone'];
         $email = $_POST['email'];
 
-        $sql = "INSERT INTO pelanggan (nama, alamat, telepon, email) VALUES ('$name', '$address', '$phone', '$email')";
-        $conn->query($sql);
+        // Call the stored procedure
+        $stmt = $conn->prepare("CALL add_pelanggan(?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $name, $address, $phone, $email);
+        $stmt->execute();
+        $stmt->close();
     } elseif (isset($_POST['edit'])) {
+        // Retrieve form data
         $id = $_POST['id'];
         $name = $_POST['name'];
         $address = $_POST['address'];
         $phone = $_POST['phone'];
         $email = $_POST['email'];
 
-        $sql = "UPDATE pelanggan SET nama='$name', alamat='$address', telepon='$phone', email='$email' WHERE id_pelanggan='$id'";
-        $conn->query($sql);
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("UPDATE pelanggan SET nama=?, alamat=?, telepon=?, email=? WHERE id_pelanggan=?");
+        // Bind the parameters
+        $stmt->bind_param("ssssi", $name, $address, $phone, $email, $id);
+        // Execute the statement
+        $stmt->execute();
+        // Close the statement
+        $stmt->close();
     } elseif (isset($_POST['delete'])) {
+        // Retrieve form data
         $id = $_POST['id'];
 
-        $sql = "DELETE FROM pelanggan WHERE id_pelanggan='$id'";
-        $conn->query($sql);
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("DELETE FROM pelanggan WHERE id_pelanggan=?");
+        // Bind the parameter
+        $stmt->bind_param("i", $id);
+        // Execute the statement
+        $stmt->execute();
+        // Close the statement
+        $stmt->close();
     }
 }
+
+
 
 // Fetch customer data
 $customerQuery = "SELECT * FROM pelanggan";
@@ -236,7 +253,6 @@ $customerResult = $conn->query($customerQuery);
         </div>
         <footer class="h-[5vh] w-full px-4 pr-6 py-[0.4px]">
             <div class="rounded-lg h-full bottom-0 bg-white flex flex-row justify-center items-center">
-                haloo
             </div>
         </footer>
     </section>

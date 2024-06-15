@@ -9,8 +9,11 @@ if (!isset($_SESSION['login_user'])) {
 include 'db/connection.php';
 $admin_email = $_SESSION['login_user'];
 
-$sql = "SELECT nama FROM admin WHERE email = '$admin_email'";
-$result = $conn->query($sql);
+$sql = "SELECT nama FROM admin WHERE email = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $admin_email);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
@@ -20,9 +23,6 @@ if ($result->num_rows > 0) {
 }
 $_SESSION['admin_name'] = $admin_name;
 
-include 'db/connection.php';
-$admin_email = $_SESSION['login_user'];
-
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add'])) {
@@ -31,8 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stock = $_POST['stock'];
         $description = $_POST['description'];
 
-        $sql = "INSERT INTO alat (nama, harga_sewa_per_hari, stok, deskripsi) VALUES ('$name', '$price', '$stock', '$description')";
-        $conn->query($sql);
+        $sql = "CALL manage_alat(NULL, ?, ?, ?, ?, 'add')";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sdis", $name, $price, $stock, $description);
+        $stmt->execute();
+        $stmt->close();
+
+        // Memanggil stored procedure stokUpdate setelah menambahkan barang baru
+        $conn->query("CALL UpdateStokAlat(3)");
     } elseif (isset($_POST['edit'])) {
         $id = $_POST['id'];
         $name = $_POST['name'];
@@ -40,13 +46,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stock = $_POST['stock'];
         $description = $_POST['description'];
 
-        $sql = "UPDATE alat SET nama='$name', harga_sewa_per_hari='$price', stok='$stock', deskripsi='$description' WHERE id_alat='$id'";
-        $conn->query($sql);
+        $sql = "CALL manage_alat(?, ?, ?, ?, ?, 'edit')";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("isdis", $id, $name, $price, $stock, $description);
+        $stmt->execute();
+        $stmt->close();
+
+        // Memanggil stored procedure stokUpdate setelah mengedit barang
+        $conn->query("CALL UpdateStokAlat(3)");
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
-        $sql = "DELETE FROM alat WHERE id_alat='$id'";
-        $conn->query($sql);
+        $sql = "CALL manage_alat(?, NULL, NULL, NULL, NULL, 'delete')";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Memanggil stored procedure stokUpdate setelah menghapus barang
+        $conn->query("CALL UpdateStokAlat(3)");
     }
 }
 
@@ -54,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $stockQuery = "SELECT * FROM alat";
 $stockResult = $conn->query($stockQuery);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -230,7 +249,7 @@ $stockResult = $conn->query($stockQuery);
 
         <footer class="h-[5vh] w-full px-4 pr-6 py-[0.4px]">
             <div class="rounded-lg h-full bottom-0 bg-white flex flex-row justify-center items-center">
-                haloo
+             
             </div>
         </footer>
     </section>

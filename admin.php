@@ -214,7 +214,7 @@ $adminResult = $conn->query($adminQuery);
         </div>
         <footer class="h-[5vh] w-full px-4 pr-6 py-[0.4px]">
             <div class="rounded-lg h-full bottom-0 bg-white flex flex-row justify-center items-center">
-                haloo
+              
             </div>
         </footer>
     </section>
